@@ -522,5 +522,129 @@
     if (el) el.textContent = value;
   }
 
+  // ==========================================================================
+  //  14. تحسينات الصفحات الداخلية (المرحلة 2) — البنية المنظّمة الجديدة
+  // ==========================================================================
+
+  // ---------- 14.1 أكورديون منهج الدورة (.module-block / .accordion-trigger) ----------
+  document.querySelectorAll('.accordion-trigger').forEach(function (trigger) {
+    trigger.addEventListener('click', function () {
+      const block = trigger.closest('.accordion-group, .module-block');
+      if (block) block.classList.toggle('open');
+    });
+  });
+
+  // ---------- 14.2 فلترة الدورات (.filter-chip / .course-card[data-level]) ----------
+  var chips = document.querySelectorAll('.filter-chip');
+  if (chips.length) {
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var filter = chip.getAttribute('data-filter');
+        chips.forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        document.querySelectorAll('.course-card[data-level]').forEach(function (card) {
+          var level = card.getAttribute('data-level');
+          card.style.display = (filter === 'all' || level === filter) ? '' : 'none';
+        });
+      });
+    });
+  }
+
+  // ---------- 14.3 تحديث علامات الدروس المكتملة في القوائم ----------
+  function refreshLessonChecks() {
+    if (!window.MuhasibProgress) return;
+    document.querySelectorAll('[data-lesson-check]').forEach(function (el) {
+      var id = el.getAttribute('data-lesson-check');
+      var icon = el.querySelector('i');
+      if (window.MuhasibProgress.isComplete(id)) {
+        el.classList.add('done');
+        if (icon) icon.className = 'fas fa-circle-check';
+      } else {
+        el.classList.remove('done');
+        if (icon) icon.className = 'fas fa-circle';
+      }
+    });
+    // شارة حالة الدرس الحالي
+    document.querySelectorAll('[data-lesson-status]').forEach(function (el) {
+      var id = el.getAttribute('data-lesson-status');
+      if (window.MuhasibProgress.isComplete(id)) {
+        el.classList.add('done');
+        el.innerHTML = '<i class="fas fa-circle-check"></i> مكتمل';
+      } else {
+        el.classList.remove('done');
+        el.innerHTML = '<i class="fas fa-circle"></i> غير مكتمل';
+      }
+    });
+  }
+
+  // ---------- 14.4 تحديث أشرطة/حبّات تقدّم الدورة ----------
+  function refreshCourseProgress() {
+    if (!window.MuhasibProgress) return;
+    document.querySelectorAll('[data-course-progress]').forEach(function (el) {
+      var total = parseInt(el.getAttribute('data-total'), 10) || 0;
+      // اجمع معرفات دروس هذه الدورة الظاهرة في الصفحة
+      var ids = [];
+      document.querySelectorAll('[data-lesson-check]').forEach(function (c) {
+        ids.push(c.getAttribute('data-lesson-check'));
+      });
+      var pct;
+      if (ids.length) {
+        pct = window.MuhasibProgress.getCourseProgress(ids);
+      } else {
+        // صفحة الدورة بدون دروس ظاهرة: احسب من الإجمالي والمكتمل عمومًا غير ممكن بدقة
+        pct = 0;
+      }
+      // شريط التقدّم في الشريط الجانبي
+      var bar = el.querySelector('.lsp-bar span');
+      if (bar) bar.style.width = pct + '%';
+      var b = el.querySelector('b');
+      if (b) b.textContent = pct + '%';
+    });
+  }
+
+  // إعادة تعريف زر الإكمال ليُحدّث كل المؤشرات الجديدة أيضًا
+  var newCompleteBtn = document.getElementById('complete-lesson-btn');
+  if (newCompleteBtn && window.MuhasibProgress) {
+    var lid = newCompleteBtn.getAttribute('data-lesson-id');
+    function syncCompleteBtn() {
+      var done = window.MuhasibProgress.isComplete(lid);
+      var span = newCompleteBtn.querySelector('span');
+      if (done) {
+        newCompleteBtn.classList.add('completed');
+        if (span) span.textContent = 'تم إكمال الدرس ✓';
+      } else {
+        newCompleteBtn.classList.remove('completed');
+        if (span) span.textContent = 'إكمال الدرس';
+      }
+      refreshLessonChecks();
+      refreshCourseProgress();
+    }
+    // استبدل المستمع القديم بإضافة مزامنة بعده
+    newCompleteBtn.addEventListener('click', function () {
+      // التأخير لضمان تنفيذ منطق التخزين أولًا
+      setTimeout(syncCompleteBtn, 0);
+    });
+    syncCompleteBtn();
+  }
+
+  // تشغيل أولي للمؤشرات
+  refreshLessonChecks();
+  refreshCourseProgress();
+
+  // ---------- 14.5 تبديل الشريط الجانبي للدرس في الجوال ----------
+  var sidebarToggle = document.getElementById('lesson-sidebar-toggle');
+  var lessonSidebar = document.getElementById('lesson-sidebar');
+  if (sidebarToggle && lessonSidebar) {
+    sidebarToggle.addEventListener('click', function () {
+      lessonSidebar.classList.toggle('open');
+    });
+    // إغلاق عند النقر على رابط درس
+    lessonSidebar.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        lessonSidebar.classList.remove('open');
+      });
+    });
+  }
+
   console.log('%c محاسب برو 📊 ', 'background:#1e3a8a;color:#fbbf24;font-size:16px;padding:6px 12px;border-radius:6px;font-weight:bold;');
 })();

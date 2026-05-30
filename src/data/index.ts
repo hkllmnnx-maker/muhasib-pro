@@ -7,6 +7,7 @@ import { courseCostAccounting } from './course-cost-accounting'
 import { courseFinancialAnalysis } from './course-financial-analysis'
 import { courseAuditing } from './course-auditing'
 import { courseTaxation } from './course-taxation'
+import { courseExcel } from './course-excel'
 
 // ==========================================================================
 //  فهرس البيانات المركزي - جميع الدورات والدوال المساعدة
@@ -21,6 +22,7 @@ export const courses: Course[] = [
   courseFinancialAnalysis,
   courseAuditing,
   courseTaxation,
+  courseExcel,
 ]
 
 /** إيجاد دورة بالـ slug */

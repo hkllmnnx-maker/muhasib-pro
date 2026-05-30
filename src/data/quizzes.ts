@@ -1117,6 +1117,183 @@ export const quizzes: Quiz[] = [
       },
     ],
   },
+
+  // ======================== Excel للمحاسبين ========================
+  {
+    id: 'quiz-excel-basics',
+    title: 'اختبار الدوال الأساسية',
+    description: 'اختبر معرفتك بالدوال الأساسية في Excel',
+    courseSlug: 'excel-for-accountants',
+    questions: [
+      {
+        id: 'q1',
+        question: 'الدالة المستخدمة لجمع نطاق من الخلايا هي:',
+        options: ['AVERAGE', 'SUM', 'COUNT', 'MAX'],
+        correctIndex: 1,
+        explanation: 'دالة SUM تجمع نطاقاً من الخلايا، مثل =SUM(A1:A10).',
+      },
+      {
+        id: 'q2',
+        question: 'لجمع المبالغ بشرط معين (مثل فرع محدد) نستخدم:',
+        options: ['SUM', 'SUMIF', 'COUNT', 'IF'],
+        correctIndex: 1,
+        explanation: 'SUMIF تجمع القيم التي تحقق شرطاً، مثل =SUMIF(C:C,"الرياض",E:E).',
+      },
+      {
+        id: 'q3',
+        question: 'الدالة COUNTIF تُستخدم لـ:',
+        options: [
+          'جمع الخلايا',
+          'عد الخلايا التي تحقق شرطاً',
+          'حساب المتوسط',
+          'إيجاد القيمة القصوى',
+        ],
+        correctIndex: 1,
+        explanation: 'COUNTIF تعدّ عدد الخلايا التي تحقق شرطاً معيناً، مثل عد الفواتير المعلّقة.',
+      },
+    ],
+  },
+  {
+    id: 'quiz-excel-logical',
+    title: 'اختبار الدوال المنطقية',
+    description: 'اختبر فهمك لدالة IF والدوال المنطقية',
+    courseSlug: 'excel-for-accountants',
+    questions: [
+      {
+        id: 'q1',
+        question: 'دالة IF في Excel تُستخدم لـ:',
+        options: [
+          'الجمع',
+          'إعطاء نتيجة مختلفة حسب تحقق شرط',
+          'البحث عن قيمة',
+          'حساب الفائدة',
+        ],
+        correctIndex: 1,
+        explanation: 'IF تعطي قيمة إذا تحقق الشرط وقيمة أخرى إذا لم يتحقق.',
+      },
+      {
+        id: 'q2',
+        question: 'الدالة التي ترجع TRUE فقط إذا تحققت كل الشروط هي:',
+        options: ['OR', 'AND', 'IF', 'NOT'],
+        correctIndex: 1,
+        explanation: 'AND ترجع TRUE فقط إذا تحققت جميع الشروط، بينما OR تكفي بتحقق أحدها.',
+      },
+      {
+        id: 'q3',
+        question: 'لمعالجة الأخطاء الناتجة عن القسمة على صفر نستخدم:',
+        options: ['IFERROR', 'SUMIF', 'VLOOKUP', 'COUNT'],
+        correctIndex: 0,
+        explanation: 'IFERROR تعرض قيمة بديلة عند حدوث خطأ، مثل =IFERROR(A1/B1,"خطأ").',
+      },
+    ],
+  },
+  {
+    id: 'quiz-excel-lookup',
+    title: 'اختبار دوال البحث',
+    description: 'اختبر فهمك لدوال VLOOKUP وINDEX/MATCH',
+    courseSlug: 'excel-for-accountants',
+    questions: [
+      {
+        id: 'q1',
+        question: 'دالة VLOOKUP تبحث:',
+        options: [
+          'أفقياً من أعلى لأسفل',
+          'عمودياً من اليسار لليمين',
+          'في كل الاتجاهات',
+          'في الأعمدة المخفية فقط',
+        ],
+        correctIndex: 1,
+        explanation: 'VLOOKUP تبحث عمودياً في العمود الأول وترجع قيمة من عمود يقع على يمينه.',
+      },
+      {
+        id: 'q2',
+        question: 'المعامل FALSE في VLOOKUP يعني:',
+        options: ['مطابقة تقريبية', 'مطابقة تامة', 'تجاهل الأخطاء', 'البحث العكسي'],
+        correctIndex: 1,
+        explanation: 'FALSE (أو 0) تعني مطابقة تامة، وهي الأكثر أماناً في البيانات المحاسبية.',
+      },
+      {
+        id: 'q3',
+        question: 'الميزة الرئيسية لـ INDEX/MATCH على VLOOKUP هي:',
+        options: [
+          'أسرع دائماً',
+          'تستطيع البحث في أي اتجاه (يمين/يسار)',
+          'لا تحتاج بيانات',
+          'تعمل بلا معادلات',
+        ],
+        correctIndex: 1,
+        explanation: 'INDEX/MATCH أكثر مرونة لأنها تبحث في أي اتجاه ولا تتأثر بإدراج/حذف الأعمدة.',
+      },
+    ],
+  },
+  {
+    id: 'quiz-excel-financial',
+    title: 'اختبار الدوال المالية',
+    description: 'اختبر فهمك للدوال المالية في Excel',
+    courseSlug: 'excel-for-accountants',
+    questions: [
+      {
+        id: 'q1',
+        question: 'الدالة المستخدمة لحساب القسط الدوري لقرض هي:',
+        options: ['PV', 'FV', 'PMT', 'RATE'],
+        correctIndex: 2,
+        explanation: 'دالة PMT تحسب القسط الدوري الثابت لقرض بناءً على المعدل وعدد الفترات والمبلغ.',
+      },
+      {
+        id: 'q2',
+        question: 'دالة SLN تُستخدم لحساب الإهلاك بطريقة:',
+        options: ['القسط الثابت', 'الرصيد المتناقص', 'مجموع أرقام السنوات', 'وحدات الإنتاج'],
+        correctIndex: 0,
+        explanation: 'SLN (Straight Line) تحسب الإهلاك بطريقة القسط الثابت = (التكلفة − المتبقية) ÷ العمر.',
+      },
+      {
+        id: 'q3',
+        question: 'دالة IRR تحسب:',
+        options: [
+          'صافي القيمة الحالية',
+          'معدل العائد الداخلي للتدفقات',
+          'القسط الشهري',
+          'القيمة المستقبلية',
+        ],
+        correctIndex: 1,
+        explanation: 'IRR (Internal Rate of Return) تحسب معدل العائد الداخلي لسلسلة من التدفقات النقدية.',
+      },
+    ],
+  },
+  {
+    id: 'quiz-excel-pivot',
+    title: 'اختبار الجداول المحورية',
+    description: 'اختبر فهمك للجداول المحورية في Excel',
+    courseSlug: 'excel-for-accountants',
+    questions: [
+      {
+        id: 'q1',
+        question: 'الجداول المحورية (Pivot Tables) تُستخدم أساساً لـ:',
+        options: [
+          'كتابة المعادلات المعقدة',
+          'تلخيص وتحليل كميات كبيرة من البيانات بسرعة',
+          'تنسيق الخلايا',
+          'حماية الورقة',
+        ],
+        correctIndex: 1,
+        explanation: 'الجداول المحورية تلخّص وتحلّل آلاف الصفوف بنقرات قليلة دون معادلات معقدة.',
+      },
+      {
+        id: 'q2',
+        question: 'كم عدد مناطق الجدول المحوري الرئيسية؟',
+        options: ['اثنتان', 'ثلاث', 'أربع', 'خمس'],
+        correctIndex: 2,
+        explanation: 'المناطق الأربع هي: الصفوف (Rows)، الأعمدة (Columns)، القيم (Values)، عوامل التصفية (Filters).',
+      },
+      {
+        id: 'q3',
+        question: 'القيم الرقمية المُجمّعة (مثل مجموع المبيعات) توضع في منطقة:',
+        options: ['الصفوف', 'الأعمدة', 'القيم (Values)', 'عوامل التصفية'],
+        correctIndex: 2,
+        explanation: 'منطقة القيم (Values) تحتوي البيانات الرقمية المُجمّعة كالمجاميع والمتوسطات.',
+      },
+    ],
+  },
 ]
 
 export function getQuizById(id: string): Quiz | undefined {

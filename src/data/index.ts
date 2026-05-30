@@ -10,6 +10,7 @@ import { courseTaxation } from './course-taxation'
 import { courseExcel } from './course-excel'
 import { courseGovernmental } from './course-governmental'
 import { courseIFRS } from './course-ifrs'
+import { courseManagerial } from './course-managerial'
 
 // ==========================================================================
 //  فهرس البيانات المركزي - جميع الدورات والدوال المساعدة
@@ -27,6 +28,7 @@ export const courses: Course[] = [
   courseExcel,
   courseGovernmental,
   courseIFRS,
+  courseManagerial,
 ]
 
 /** إيجاد دورة بالـ slug */

@@ -61,16 +61,19 @@ function renderBlock(block: ContentBlock) {
         ${raw(block.text || '')}
       </div>`
     case 'journal': {
-      const totalDebit = (block.entries || []).reduce((s, e) => s + (e.debit || 0), 0)
-      const totalCredit = (block.entries || []).reduce((s, e) => s + (e.credit || 0), 0)
+      // دعم الحقلين lines (المستخدم في الدورات) و entries (القديم) للتوافق
+      const jLines = block.lines || block.entries || []
+      const jTitle = block.title || block.caption
+      const totalDebit = jLines.reduce((s, e) => s + (e.debit || 0), 0)
+      const totalCredit = jLines.reduce((s, e) => s + (e.credit || 0), 0)
       return html`<div class="journal-entry">
-        ${block.caption ? html`<div style="font-weight:800;margin-bottom:12px;color:var(--color-primary-light)"><i class="fas fa-pen-to-square"></i> ${block.caption}</div>` : ''}
+        ${jTitle ? html`<div style="font-weight:800;margin-bottom:12px;color:var(--color-primary-light)"><i class="fas fa-pen-to-square"></i> ${jTitle}</div>` : ''}
         <table>
           <thead>
             <tr><th>الحساب / البيان</th><th style="width:120px">مدين</th><th style="width:120px">دائن</th></tr>
           </thead>
           <tbody>
-            ${(block.entries || []).map(
+            ${jLines.map(
               (e) => html`<tr>
                 <td style="${e.credit ? 'padding-right:32px' : ''}">${raw(e.account)}</td>
                 <td>${e.debit ? e.debit.toLocaleString('ar-EG') : ''}</td>

@@ -27,7 +27,8 @@ export interface ContentBlock {
   // صندوق التنبيه
   variant?: 'info' | 'tip' | 'warning' | 'example'
   title?: string
-  // قيد محاسبي
+  // قيد محاسبي — يُستخدم الحقل lines في كل الدورات (entries مدعوم للتوافق القديم)
+  lines?: JournalLine[]
   entries?: JournalLine[]
   caption?: string
 }

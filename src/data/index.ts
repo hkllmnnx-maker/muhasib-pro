@@ -3,6 +3,8 @@ import { courseFundamentals } from './course-fundamentals'
 import { courseFinancialStatements } from './course-financial-statements'
 import { courseAdvanced } from './course-advanced'
 import { courseProfessional } from './course-professional'
+import { courseCostAccounting } from './course-cost-accounting'
+import { courseFinancialAnalysis } from './course-financial-analysis'
 
 // ==========================================================================
 //  فهرس البيانات المركزي - جميع الدورات والدوال المساعدة
@@ -13,6 +15,8 @@ export const courses: Course[] = [
   courseFinancialStatements,
   courseAdvanced,
   courseProfessional,
+  courseCostAccounting,
+  courseFinancialAnalysis,
 ]
 
 /** إيجاد دورة بالـ slug */

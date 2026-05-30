@@ -13,6 +13,7 @@ import { courseIFRS } from './course-ifrs'
 import { courseManagerial } from './course-managerial'
 import { courseDigital } from './course-digital'
 import { courseBanking } from './course-banking'
+import { courseCorporate } from './course-corporate'
 
 // ==========================================================================
 //  فهرس البيانات المركزي - جميع الدورات والدوال المساعدة
@@ -33,6 +34,7 @@ export const courses: Course[] = [
   courseManagerial,
   courseDigital,
   courseBanking,
+  courseCorporate,
 ]
 
 /** إيجاد دورة بالـ slug */

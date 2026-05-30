@@ -8,6 +8,7 @@ import { courseFinancialAnalysis } from './course-financial-analysis'
 import { courseAuditing } from './course-auditing'
 import { courseTaxation } from './course-taxation'
 import { courseExcel } from './course-excel'
+import { courseGovernmental } from './course-governmental'
 
 // ==========================================================================
 //  فهرس البيانات المركزي - جميع الدورات والدوال المساعدة
@@ -23,6 +24,7 @@ export const courses: Course[] = [
   courseAuditing,
   courseTaxation,
   courseExcel,
+  courseGovernmental,
 ]
 
 /** إيجاد دورة بالـ slug */

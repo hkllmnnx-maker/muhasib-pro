@@ -839,5 +839,101 @@
     refreshYemeniPath();
   }
 
+  // ==========================================================================
+//  16. صفحة شهادة الإتمام التعليمية (صفحة /certificate/:slug)
+// ==========================================================================
+  (function initCertificate() {
+    var page = document.querySelector('[data-certificate-page]');
+    if (!page || !window.MuhasibProgress) return;
+
+    var data = window.CERT_DATA || {};
+    var lessonIds = data.lessonIds || safeParse(page.getAttribute('data-path-lessons'), []);
+    var total = data.total || parseInt(page.getAttribute('data-path-total'), 10) || lessonIds.length;
+    var slug = data.slug || page.getAttribute('data-path-slug') || 'path';
+    var title = data.title || page.getAttribute('data-path-title') || '';
+
+    var done = countDone(lessonIds);
+    var isComplete = total > 0 && done >= total;
+
+    var gate = page.querySelector('[data-cert-gate]');
+    var ready = page.querySelector('[data-cert-ready]');
+
+    if (!isComplete) {
+      // عرض حالة عدم الإكمال
+      if (gate) gate.style.display = '';
+      if (ready) ready.style.display = 'none';
+      var gateDone = page.querySelector('[data-gate-done]');
+      if (gateDone) gateDone.textContent = done.toLocaleString('ar-EG');
+      var gateTotal = page.querySelector('[data-gate-total]');
+      if (gateTotal) gateTotal.textContent = total.toLocaleString('ar-EG');
+      var gateBar = page.querySelector('[data-gate-bar]');
+      if (gateBar) gateBar.style.width = pctOf(done, total) + '%';
+      return;
+    }
+
+    // الإكمال: إظهار الشهادة
+    if (gate) gate.style.display = 'none';
+    if (ready) ready.style.display = '';
+
+    // التاريخ بالميلادي العربي
+    var dateEl = page.querySelector('[data-cert-date]');
+    var today = new Date();
+    if (dateEl) {
+      try {
+        dateEl.textContent = today.toLocaleDateString('ar-EG', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        });
+      } catch (e) {
+        dateEl.textContent = today.getFullYear() + '/' + (today.getMonth() + 1) + '/' + today.getDate();
+      }
+    }
+
+    // رقم شهادة ثابت لكل مستخدم/مسار (يُحفظ في التخزين المحلي)
+    var idEl = page.querySelector('[data-cert-id]');
+    var idKey = 'certId_' + slug;
+    var certId = localStorage.getItem(idKey);
+    if (!certId) {
+      certId = 'MP-' + slug.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) +
+        '-' + today.getFullYear() +
+        '-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+      localStorage.setItem(idKey, certId);
+    }
+    if (idEl) idEl.textContent = certId;
+
+    // اسم المتلقّي — محفوظ ومتزامن مع الإدخال
+    var recipientEl = page.querySelector('[data-cert-recipient]');
+    var nameInput = document.getElementById('cert-name-input');
+    var nameKey = 'certName';
+    var savedName = localStorage.getItem(nameKey) || '';
+
+    function applyName(name) {
+      var clean = (name || '').trim();
+      if (recipientEl) recipientEl.textContent = clean || 'اسم المتعلّم';
+    }
+    if (nameInput) {
+      nameInput.value = savedName;
+      applyName(savedName);
+      nameInput.addEventListener('input', function () {
+        localStorage.setItem(nameKey, nameInput.value);
+        applyName(nameInput.value);
+      });
+    } else {
+      applyName(savedName);
+    }
+
+    // زر الطباعة
+    var printBtn = document.getElementById('cert-print-btn');
+    if (printBtn) {
+      printBtn.addEventListener('click', function () {
+        if (nameInput && !nameInput.value.trim()) {
+          showToast('فضلاً اكتب اسمك أولاً قبل الطباعة', 'warning');
+          nameInput.focus();
+          return;
+        }
+        window.print();
+      });
+    }
+  })();
+
   console.log('%c محاسب برو 📊 ', 'background:#1e3a8a;color:#fbbf24;font-size:16px;padding:6px 12px;border-radius:6px;font-weight:bold;');
 })();

@@ -6,6 +6,8 @@ import { LessonPage } from './pages/lesson'
 import { QuizPage } from './pages/quiz'
 import { ToolsPage } from './pages/tools'
 import { RoadmapPage } from './pages/roadmap'
+import { CertificatePage } from './pages/certificate'
+import { getPathBySlug } from './data/learning-paths'
 import { GlossaryPage } from './pages/glossary'
 import { BlogPage, ArticlePage } from './pages/blog'
 import { AboutPage } from './pages/about'
@@ -27,6 +29,14 @@ app.get('/courses', (c) => c.html(CoursesPage().toString()))
 
 // مسار التعلّم
 app.get('/roadmap', (c) => c.html(RoadmapPage().toString()))
+
+// شهادة إتمام مسار تعليمي
+app.get('/certificate/:slug', (c) => {
+  const slug = c.req.param('slug')
+  const path = getPathBySlug(slug)
+  if (!path) return c.notFound()
+  return c.html(CertificatePage(path).toString())
+})
 
 // الأدوات الحاسبية
 app.get('/tools', (c) => c.html(ToolsPage().toString()))

@@ -14,6 +14,7 @@ import { courseManagerial } from './course-managerial'
 import { courseDigital } from './course-digital'
 import { courseBanking } from './course-banking'
 import { courseCorporate } from './course-corporate'
+import { courseGovernmentAccounting } from './course-government-accounting'
 
 // ==========================================================================
 //  فهرس البيانات المركزي - جميع الدورات والدوال المساعدة
@@ -35,6 +36,7 @@ export const courses: Course[] = [
   courseDigital,
   courseBanking,
   courseCorporate,
+  courseGovernmentAccounting,
 ]
 
 /** إيجاد دورة بالـ slug */

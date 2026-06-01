@@ -150,7 +150,7 @@ export const courseManagerial: Course = {
           title: 'تحليل التكلفة والحجم والربح (CVP)',
           summary: 'هامش المساهمة ونقطة التعادل وهامش الأمان',
           duration: 28,
-          quizId: 'quiz-cvp',
+          quizId: 'quiz-cvp-managerial',
           content: [
             {
               type: 'paragraph',

@@ -10,7 +10,9 @@ import { getCourseBySlug } from '../data'
 export const QuizPage = (quiz: Quiz) => {
   const course = quiz.courseSlug ? getCourseBySlug(quiz.courseSlug) : undefined
 
-  // بيانات الاختبار للمتصفح (آمنة عبر JSON.stringify)
+  // بيانات الاختبار للمتصفح.
+  // تأمين الحقن داخل وسم <script>: نهرّب المحارف التي قد تُنهي الوسم مبكرًا
+  // (</script>) أو تكسر السياق (<, >, &, U+2028, U+2029) لمنع XSS / JSON injection.
   const quizJson = JSON.stringify({
     id: quiz.id,
     title: quiz.title,
@@ -21,6 +23,11 @@ export const QuizPage = (quiz: Quiz) => {
       explanation: q.explanation,
     })),
   })
+    .replace(/</g, '\\u003C')
+    .replace(/>/g, '\\u003E')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029')
 
   const content = html`
     <section class="quiz-page">

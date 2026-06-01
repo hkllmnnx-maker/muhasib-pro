@@ -5,6 +5,43 @@
 (function () {
   'use strict';
 
+  // ---------- 0. أدوات أمان ومساعدة ----------
+  // تهريب HTML لمنع XSS عند بناء عناصر عبر innerHTML من بيانات نصية
+  function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // تنسيق رقم بأمان مع منع NaN / Infinity من الظهور للمستخدم
+  function safeNumber(value, fallback) {
+    var n = (typeof value === 'number') ? value : parseFloat(value);
+    if (!isFinite(n)) return (fallback === undefined ? 0 : fallback);
+    return n;
+  }
+
+  function formatMoney(value, digits) {
+    var n = safeNumber(value, 0);
+    return n.toLocaleString('ar-EG', {
+      maximumFractionDigits: digits === undefined ? 2 : digits,
+    });
+  }
+
+  // كتابة آمنة إلى localStorage (تتعامل مع امتلاء التخزين / وضع التصفح الخاص)
+  function safeStorageSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e) {
+      // QuotaExceededError أو localStorage غير متاح — نتجاهل بهدوء دون كسر الواجهة
+      return false;
+    }
+  }
+
   // ---------- 1. إدارة الوضع الليلي/النهاري ----------
   const themeToggle = document.getElementById('theme-toggle');
   function updateThemeIcon() {
@@ -20,7 +57,7 @@
       const current = document.documentElement.getAttribute('data-theme');
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
+      safeStorageSet('theme', next);
       updateThemeIcon();
     });
   }
@@ -169,26 +206,31 @@
   window.MuhasibProgress = {
     getCompleted: function () {
       try {
-        return JSON.parse(localStorage.getItem('completedLessons') || '[]');
+        const parsed = JSON.parse(localStorage.getItem('completedLessons') || '[]');
+        // التأكد أن القيمة مصفوفة فعلاً (حماية من بيانات تالفة)
+        return Array.isArray(parsed) ? parsed : [];
       } catch (e) {
         return [];
       }
     },
     markComplete: function (lessonId) {
+      if (!lessonId) return;
       const list = this.getCompleted();
       if (list.indexOf(lessonId) === -1) {
         list.push(lessonId);
-        localStorage.setItem('completedLessons', JSON.stringify(list));
+        safeStorageSet('completedLessons', JSON.stringify(list));
       }
     },
     unmarkComplete: function (lessonId) {
+      if (!lessonId) return;
       let list = this.getCompleted();
       list = list.filter(function (id) {
         return id !== lessonId;
       });
-      localStorage.setItem('completedLessons', JSON.stringify(list));
+      safeStorageSet('completedLessons', JSON.stringify(list));
     },
     isComplete: function (lessonId) {
+      if (!lessonId) return false;
       return this.getCompleted().indexOf(lessonId) !== -1;
     },
     getCourseProgress: function (lessonIds) {
@@ -290,7 +332,8 @@
       const query = glossarySearch.value.trim().toLowerCase();
       let visibleCount = 0;
       document.querySelectorAll('[data-glossary-term]').forEach(function (term) {
-        const text = term.getAttribute('data-search').toLowerCase();
+        // الحماية من غياب السمة data-search لتجنّب خطأ null.toLowerCase()
+        const text = (term.getAttribute('data-search') || '').toLowerCase();
         if (text.indexOf(query) !== -1) {
           term.style.display = '';
           visibleCount++;
@@ -321,6 +364,15 @@
   function initQuiz(quiz) {
     const root = document.getElementById('quiz-root');
     if (!root) return;
+    // حماية من بيانات اختبار غير صالحة أو فارغة
+    if (!quiz || !Array.isArray(quiz.questions) || quiz.questions.length === 0) {
+      root.innerHTML =
+        '<div class="callout callout-warning"><span class="callout-icon">' +
+        '<i class="fas fa-triangle-exclamation"></i></span>' +
+        '<div class="callout-content"><strong>تعذّر تحميل الاختبار</strong>' +
+        '<p>لا توجد أسئلة متاحة لهذا الاختبار حاليًا.</p></div></div>';
+      return;
+    }
     let currentQ = 0;
     const answers = new Array(quiz.questions.length).fill(null);
 
@@ -337,8 +389,8 @@
         const selected = answers[currentQ] === i ? 'selected' : '';
         optionsHtml +=
           '<div class="answer-option ' + selected + '" data-option="' + i + '">' +
-          '<span class="answer-marker">' + letters[i] + '</span>' +
-          '<span>' + opt + '</span></div>';
+          '<span class="answer-marker">' + (letters[i] || (i + 1)) + '</span>' +
+          '<span>' + escapeHtml(opt) + '</span></div>';
       });
       root.innerHTML =
         '<div class="quiz-progress-header">' +
@@ -346,7 +398,7 @@
         '<span class="text-muted">' + progress + '٪</span></div>' +
         '<div class="progress-bar mb-3"><div class="progress-fill" style="width:' + progress + '%"></div></div>' +
         '<div class="question-card">' +
-        '<div class="question-text">' + q.question + '</div>' +
+        '<div class="question-text">' + escapeHtml(q.question) + '</div>' +
         '<div id="options-list">' + optionsHtml + '</div>' +
         '<div id="explanation-box" style="display:none" class="callout callout-info mt-3"></div>' +
         '</div>' +
@@ -375,7 +427,7 @@
             expBox.className = 'callout mt-3 ' + (isRight ? 'callout-tip' : 'callout-warning');
             expBox.innerHTML =
               '<span class="callout-icon"><i class="fas ' + (isRight ? 'fa-check-circle' : 'fa-times-circle') + '"></i></span>' +
-              '<div class="callout-content"><strong>' + (isRight ? 'إجابة صحيحة!' : 'إجابة خاطئة') + '</strong><p>' + q.explanation + '</p></div>';
+              '<div class="callout-content"><strong>' + (isRight ? 'إجابة صحيحة!' : 'إجابة خاطئة') + '</strong><p>' + escapeHtml(q.explanation) + '</p></div>';
           }
         });
       });
@@ -437,15 +489,16 @@
     const eqForm = document.getElementById('tool-equation');
     if (eqForm) {
       eqForm.addEventListener('input', function () {
-        const assets = parseFloat(document.getElementById('eq-assets').value) || 0;
-        const liabilities = parseFloat(document.getElementById('eq-liabilities').value) || 0;
+        const assets = safeNumber(document.getElementById('eq-assets').value, 0);
+        const liabilities = safeNumber(document.getElementById('eq-liabilities').value, 0);
         const equity = assets - liabilities;
         const out = document.getElementById('eq-result');
-        if (out) out.textContent = equity.toLocaleString('ar-EG');
+        if (out) out.textContent = formatMoney(equity, 2);
         const status = document.getElementById('eq-status');
         if (status) {
-          status.innerHTML = 'الأصول (' + assets.toLocaleString('ar-EG') + ') = الالتزامات (' +
-            liabilities.toLocaleString('ar-EG') + ') + حقوق الملكية (' + equity.toLocaleString('ar-EG') + ')';
+          // نستخدم textContent عبر بناء العناصر بأمان (القيم أرقام مُنسّقة فقط)
+          status.textContent = 'الأصول (' + formatMoney(assets, 2) + ') = الالتزامات (' +
+            formatMoney(liabilities, 2) + ') + حقوق الملكية (' + formatMoney(equity, 2) + ')';
         }
       });
     }
@@ -454,14 +507,21 @@
     const depForm = document.getElementById('tool-depreciation');
     if (depForm) {
       depForm.addEventListener('input', function () {
-        const cost = parseFloat(document.getElementById('dep-cost').value) || 0;
-        const salvage = parseFloat(document.getElementById('dep-salvage').value) || 0;
-        const life = parseFloat(document.getElementById('dep-life').value) || 1;
+        const cost = safeNumber(document.getElementById('dep-cost').value, 0);
+        const salvage = safeNumber(document.getElementById('dep-salvage').value, 0);
+        let life = safeNumber(document.getElementById('dep-life').value, 0);
+        // العمر الإنتاجي يجب أن يكون موجبًا لتجنّب القسمة على صفر أو نتائج سالبة
+        if (life <= 0) {
+          setText('dep-annual', '—');
+          setText('dep-monthly', '—');
+          setText('dep-rate', '—');
+          return;
+        }
         const annual = (cost - salvage) / life;
-        const rate = cost ? ((annual / cost) * 100) : 0;
-        setText('dep-annual', annual.toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
-        setText('dep-monthly', (annual / 12).toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
-        setText('dep-rate', rate.toFixed(2) + '٪');
+        const rate = cost > 0 ? ((annual / cost) * 100) : 0;
+        setText('dep-annual', formatMoney(annual, 2));
+        setText('dep-monthly', formatMoney(annual / 12, 2));
+        setText('dep-rate', safeNumber(rate, 0).toFixed(2) + '٪');
       });
     }
 
@@ -469,17 +529,17 @@
     const profitForm = document.getElementById('tool-profit');
     if (profitForm) {
       profitForm.addEventListener('input', function () {
-        const revenue = parseFloat(document.getElementById('pr-revenue').value) || 0;
-        const cost = parseFloat(document.getElementById('pr-cost').value) || 0;
-        const expenses = parseFloat(document.getElementById('pr-expenses').value) || 0;
+        const revenue = safeNumber(document.getElementById('pr-revenue').value, 0);
+        const cost = safeNumber(document.getElementById('pr-cost').value, 0);
+        const expenses = safeNumber(document.getElementById('pr-expenses').value, 0);
         const grossProfit = revenue - cost;
         const netProfit = grossProfit - expenses;
-        const grossMargin = revenue ? (grossProfit / revenue) * 100 : 0;
-        const netMargin = revenue ? (netProfit / revenue) * 100 : 0;
-        setText('pr-gross', grossProfit.toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
-        setText('pr-net', netProfit.toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
-        setText('pr-gross-margin', grossMargin.toFixed(1) + '٪');
-        setText('pr-net-margin', netMargin.toFixed(1) + '٪');
+        const grossMargin = revenue !== 0 ? (grossProfit / revenue) * 100 : 0;
+        const netMargin = revenue !== 0 ? (netProfit / revenue) * 100 : 0;
+        setText('pr-gross', formatMoney(grossProfit, 2));
+        setText('pr-net', formatMoney(netProfit, 2));
+        setText('pr-gross-margin', safeNumber(grossMargin, 0).toFixed(1) + '٪');
+        setText('pr-net-margin', safeNumber(netMargin, 0).toFixed(1) + '٪');
       });
     }
 
@@ -487,15 +547,21 @@
     const beForm = document.getElementById('tool-breakeven');
     if (beForm) {
       beForm.addEventListener('input', function () {
-        const fixed = parseFloat(document.getElementById('be-fixed').value) || 0;
-        const price = parseFloat(document.getElementById('be-price').value) || 0;
-        const varCost = parseFloat(document.getElementById('be-variable').value) || 0;
+        const fixed = safeNumber(document.getElementById('be-fixed').value, 0);
+        const price = safeNumber(document.getElementById('be-price').value, 0);
+        const varCost = safeNumber(document.getElementById('be-variable').value, 0);
         const contribution = price - varCost;
-        const beUnits = contribution > 0 ? fixed / contribution : 0;
+        setText('be-contribution', formatMoney(contribution, 2));
+        // هامش المساهمة يجب أن يكون موجبًا، وإلا لا توجد نقطة تعادل
+        if (contribution <= 0) {
+          setText('be-units', '—');
+          setText('be-sales', '—');
+          return;
+        }
+        const beUnits = fixed / contribution;
         const beSales = beUnits * price;
-        setText('be-contribution', contribution.toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
-        setText('be-units', Math.ceil(beUnits).toLocaleString('ar-EG'));
-        setText('be-sales', beSales.toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
+        setText('be-units', Math.ceil(safeNumber(beUnits, 0)).toLocaleString('ar-EG'));
+        setText('be-sales', formatMoney(beSales, 2));
       });
     }
 
@@ -503,17 +569,17 @@
     const ratioForm = document.getElementById('tool-ratios');
     if (ratioForm) {
       ratioForm.addEventListener('input', function () {
-        const currentAssets = parseFloat(document.getElementById('rt-current-assets').value) || 0;
-        const inventory = parseFloat(document.getElementById('rt-inventory').value) || 0;
-        const currentLiab = parseFloat(document.getElementById('rt-current-liab').value) || 0;
-        const totalDebt = parseFloat(document.getElementById('rt-total-debt').value) || 0;
-        const totalEquity = parseFloat(document.getElementById('rt-total-equity').value) || 0;
-        const currentRatio = currentLiab ? currentAssets / currentLiab : 0;
-        const quickRatio = currentLiab ? (currentAssets - inventory) / currentLiab : 0;
-        const debtToEquity = totalEquity ? totalDebt / totalEquity : 0;
-        setText('rt-current', currentRatio.toFixed(2));
-        setText('rt-quick', quickRatio.toFixed(2));
-        setText('rt-debt-equity', debtToEquity.toFixed(2));
+        const currentAssets = safeNumber(document.getElementById('rt-current-assets').value, 0);
+        const inventory = safeNumber(document.getElementById('rt-inventory').value, 0);
+        const currentLiab = safeNumber(document.getElementById('rt-current-liab').value, 0);
+        const totalDebt = safeNumber(document.getElementById('rt-total-debt').value, 0);
+        const totalEquity = safeNumber(document.getElementById('rt-total-equity').value, 0);
+        const currentRatio = currentLiab !== 0 ? currentAssets / currentLiab : 0;
+        const quickRatio = currentLiab !== 0 ? (currentAssets - inventory) / currentLiab : 0;
+        const debtToEquity = totalEquity !== 0 ? totalDebt / totalEquity : 0;
+        setText('rt-current', currentLiab !== 0 ? safeNumber(currentRatio, 0).toFixed(2) : '—');
+        setText('rt-quick', currentLiab !== 0 ? safeNumber(quickRatio, 0).toFixed(2) : '—');
+        setText('rt-debt-equity', totalEquity !== 0 ? safeNumber(debtToEquity, 0).toFixed(2) : '—');
       });
     }
   }

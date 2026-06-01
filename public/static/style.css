@@ -1368,3 +1368,183 @@ input, textarea, select { font-family: inherit; }
   .roadmap::before { right: 31px; }
   .roadmap-marker { width: 50px; height: 50px; font-size: 1.1rem; }
 }
+
+/* ==========================================================================
+   لوحة تقدّم المتعلّم + مسار المحاسب اليمني (Agent 14)
+   ========================================================================== */
+
+/* ---------- لوحة التقدّم العامة ---------- */
+.progress-dashboard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 32px;
+  margin-bottom: 8px;
+}
+.pd-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px; flex-wrap: wrap; margin-bottom: 28px;
+}
+.pd-title { font-size: 1.6rem; margin: 0 0 6px; color: var(--text-primary); }
+.pd-title i { color: var(--color-primary-light); }
+.pd-sub { color: var(--text-secondary); margin: 0; font-size: .95rem; }
+
+.pd-ring { position: relative; width: 130px; height: 130px; flex-shrink: 0; }
+.pd-ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.pd-ring-bg { fill: none; stroke: var(--bg-surface-2); stroke-width: 10; }
+.pd-ring-fill {
+  fill: none; stroke: url(#pdGrad); stroke: var(--color-primary-light);
+  stroke-width: 10; stroke-linecap: round;
+  stroke-dasharray: 327; stroke-dashoffset: 327;
+  transition: stroke-dashoffset .9s cubic-bezier(.22,1,.36,1);
+}
+.pd-ring-label {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.pd-ring-label b { font-size: 1.9rem; color: var(--text-primary); line-height: 1; }
+.pd-ring-label small { color: var(--text-muted); font-size: .8rem; }
+
+.pd-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;
+}
+.pd-stat {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-surface-2); border-radius: var(--radius-lg); padding: 16px;
+}
+.pd-stat-icon {
+  width: 46px; height: 46px; border-radius: var(--radius-md); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+}
+.pd-stat b { display: block; font-size: 1.5rem; color: var(--text-primary); line-height: 1.1; }
+.pd-stat small { color: var(--text-secondary); font-size: .85rem; }
+
+.pd-next {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; padding: 18px 20px; border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(251,191,36,.08));
+  border: 1px dashed var(--border-color-strong);
+}
+.pd-next-info { display: flex; flex-direction: column; gap: 4px; }
+.pd-next-info strong { font-size: 1.1rem; color: var(--text-primary); }
+.pd-next-info small { color: var(--text-secondary); }
+.pd-next-badge {
+  align-self: flex-start; background: var(--gradient-primary, linear-gradient(135deg,#1e3a8a,#3b82f6));
+  color: #fff; font-size: .75rem; font-weight: 700; padding: 4px 12px;
+  border-radius: var(--radius-full); margin-bottom: 4px;
+}
+
+/* ---------- مسار المحاسب اليمني ---------- */
+.ypath {
+  background: var(--bg-surface); border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); overflow: hidden;
+}
+.ypath-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  flex-wrap: wrap; padding: 32px; color: #fff;
+}
+.ypath-badge {
+  display: inline-block; background: rgba(255,255,255,.2); backdrop-filter: blur(4px);
+  font-size: .8rem; font-weight: 700; padding: 5px 14px; border-radius: var(--radius-full);
+  margin-bottom: 10px;
+}
+.ypath-head h2 { font-size: 1.8rem; margin: 0 0 8px; }
+.ypath-head p { margin: 0; opacity: .92; max-width: 520px; }
+.ypath-head-progress { min-width: 200px; }
+.ypath-progress-num b { font-size: 2.2rem; font-weight: 900; }
+.ypath-progress-bar {
+  height: 10px; background: rgba(255,255,255,.25); border-radius: var(--radius-full);
+  overflow: hidden; margin: 6px 0;
+}
+.ypath-progress-bar span {
+  display: block; height: 100%; background: #fff; border-radius: var(--radius-full);
+  transition: width .8s cubic-bezier(.22,1,.36,1);
+}
+.ypath-head-progress small { opacity: .9; }
+
+.ypath-desc { padding: 24px 32px 0; color: var(--text-secondary); line-height: 1.9; margin: 0; }
+.ypath-note {
+  margin: 18px 32px; padding: 12px 16px; border-radius: var(--radius-md);
+  background: rgba(2,132,199,.08); color: var(--color-info);
+  font-size: .9rem; display: flex; gap: 8px; align-items: flex-start; line-height: 1.7;
+}
+.ypath-note i { margin-top: 3px; }
+
+.ypath-steps { padding: 0 32px 8px; display: flex; flex-direction: column; gap: 18px; }
+.ypath-step { display: flex; gap: 18px; position: relative; }
+.ypath-step:not(:last-child)::before {
+  content: ''; position: absolute; right: 27px; top: 56px; bottom: -18px; width: 2px;
+  background: var(--border-color);
+}
+.ypath-step-marker {
+  width: 56px; height: 56px; border-radius: var(--radius-lg); color: #fff; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3rem;
+  position: relative; z-index: 1; box-shadow: var(--shadow-md);
+}
+.ypath-step-done { display: none; position: absolute; font-size: 1.5rem; }
+.ypath-step.completed .ypath-step-num { display: none; }
+.ypath-step.completed .ypath-step-done { display: block; }
+.ypath-step.completed .ypath-step-marker { background: var(--color-success) !important; }
+
+.ypath-step-card {
+  flex: 1; background: var(--bg-surface-2); border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg); padding: 18px 20px;
+}
+.ypath-step-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ypath-step-top h3 { font-size: 1.15rem; margin: 0; color: var(--text-primary); }
+.ypath-step-top h3 i { color: var(--color-primary-light); margin-left: 4px; }
+.ypath-optional {
+  font-size: .72rem; font-weight: 700; padding: 2px 10px; border-radius: var(--radius-full);
+  background: var(--color-accent-light); color: #78350f;
+}
+.ypath-step-label { color: var(--text-secondary); font-size: .92rem; margin: 8px 0 12px; line-height: 1.7; }
+.ypath-step-meta {
+  display: flex; gap: 16px; flex-wrap: wrap; color: var(--text-muted);
+  font-size: .82rem; margin-bottom: 14px;
+}
+.ypath-step-meta i { margin-left: 4px; }
+.ypath-step-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ypath-step-bar {
+  flex: 1; min-width: 100px; height: 8px; background: var(--bg-surface-3);
+  border-radius: var(--radius-full); overflow: hidden;
+}
+.ypath-step-bar span {
+  display: block; height: 100%; background: var(--color-success);
+  border-radius: var(--radius-full); transition: width .7s ease;
+}
+.ypath-step-pct { font-weight: 800; color: var(--color-success); font-size: .9rem; min-width: 42px; }
+
+/* شهادة المسار */
+.ypath-cert { padding: 24px 32px 32px; text-align: center; }
+.ypath-cert-locked {
+  display: flex; align-items: center; gap: 14px; justify-content: center;
+  background: var(--bg-surface-2); border: 1px dashed var(--border-color-strong);
+  border-radius: var(--radius-lg); padding: 18px; color: var(--text-secondary);
+}
+.ypath-cert-locked i { font-size: 1.6rem; color: var(--text-muted); }
+.ypath-cert-locked strong { display: block; color: var(--text-primary); }
+.ypath-cert-locked small { font-size: .85rem; }
+
+/* ---------- أشرطة تقدّم خطوات الطريق العام ---------- */
+.roadmap-step-progress { display: flex; align-items: center; gap: 12px; margin: 14px 0; }
+.roadmap-step-bar {
+  flex: 1; height: 8px; background: var(--bg-surface-2);
+  border-radius: var(--radius-full); overflow: hidden;
+}
+.roadmap-step-bar span {
+  display: block; height: 100%; background: var(--color-success);
+  border-radius: var(--radius-full); transition: width .7s ease; width: 0;
+}
+.roadmap-step-pct { font-size: .82rem; font-weight: 700; color: var(--text-secondary); min-width: 80px; }
+.roadmap-step.done .roadmap-step-pct { color: var(--color-success); }
+
+/* ---------- استجابة الجوال ---------- */
+@media (max-width: 760px) {
+  .progress-dashboard { padding: 22px; }
+  .pd-stats { grid-template-columns: repeat(2, 1fr); }
+  .ypath-head, .ypath-desc, .ypath-note, .ypath-steps, .ypath-cert { padding-left: 18px; padding-right: 18px; }
+  .ypath-head h2 { font-size: 1.4rem; }
+  .ypath-step:not(:last-child)::before { right: 22px; }
+  .ypath-step-marker { width: 46px; height: 46px; font-size: 1.1rem; }
+}

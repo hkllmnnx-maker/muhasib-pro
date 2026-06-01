@@ -646,5 +646,198 @@
     });
   }
 
+  // ==========================================================================
+//  15. لوحة تقدّم المتعلّم + مسار المحاسب اليمني (صفحة /roadmap)
+// ==========================================================================
+
+  function safeParse(str, fallback) {
+    try {
+      return JSON.parse(str);
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function countDone(ids) {
+    if (!window.MuhasibProgress || !ids || !ids.length) return 0;
+    var completed = window.MuhasibProgress.getCompleted();
+    return ids.filter(function (id) {
+      return completed.indexOf(id) !== -1;
+    }).length;
+  }
+
+  function pctOf(done, total) {
+    return total ? Math.round((done / total) * 100) : 0;
+  }
+
+  // ---------- 15.1 لوحة التقدّم العامة ----------
+  function refreshProgressDashboard() {
+    var dash = document.querySelector('[data-progress-dashboard]');
+    if (!dash || !window.MuhasibProgress) return;
+
+    var allIds = safeParse(dash.getAttribute('data-all-lessons'), []);
+    var total = parseInt(dash.getAttribute('data-total'), 10) || allIds.length;
+    var done = countDone(allIds);
+    var pct = pctOf(done, total);
+
+    // الحلقة الدائرية
+    var percentEl = dash.querySelector('[data-pd-percent]');
+    if (percentEl) percentEl.textContent = pct + '%';
+    var ringFill = dash.querySelector('[data-pd-ring-fill]');
+    if (ringFill) {
+      var r = 52;
+      var circ = 2 * Math.PI * r;
+      ringFill.style.strokeDasharray = circ;
+      ringFill.style.strokeDashoffset = circ * (1 - pct / 100);
+    }
+
+    var completedEl = dash.querySelector('[data-pd-completed]');
+    if (completedEl) completedEl.textContent = done.toLocaleString('ar-EG');
+
+    // دورات بدأتها / دورات مكتملة — تُحسب من خطوات الطريق العامة
+    var roadmapSteps = document.querySelectorAll('[data-roadmap-step]');
+    var started = 0;
+    var coursesDone = 0;
+    roadmapSteps.forEach(function (step) {
+      var ids = safeParse(step.getAttribute('data-course-lessons'), []);
+      var d = countDone(ids);
+      if (d > 0) started++;
+      if (ids.length && d === ids.length) coursesDone++;
+    });
+    var startedEl = dash.querySelector('[data-pd-courses-started]');
+    if (startedEl) startedEl.textContent = started.toLocaleString('ar-EG');
+    var doneEl = dash.querySelector('[data-pd-courses-done]');
+    if (doneEl) doneEl.textContent = coursesDone.toLocaleString('ar-EG');
+
+    // اقتراح الدرس التالي
+    suggestNextLesson(dash, allIds);
+  }
+
+  // ---------- 15.2 اقتراح الدرس التالي ----------
+  function suggestNextLesson(dash, allIds) {
+    var nextBox = dash.querySelector('[data-pd-next]');
+    var emptyBox = dash.querySelector('[data-pd-next-empty]');
+    var map = window.MUHASIB_LESSON_MAP || [];
+    var completed = window.MuhasibProgress.getCompleted();
+
+    // إن لم يُكمل أي درس: أظهر صندوق "ابدأ الآن"
+    if (!completed.length) {
+      if (nextBox) nextBox.style.display = 'none';
+      if (emptyBox) emptyBox.style.display = '';
+      return;
+    }
+
+    // أوجد أول درس غير مكتمل بالترتيب
+    var next = null;
+    for (var i = 0; i < map.length; i++) {
+      if (completed.indexOf(map[i].id) === -1) {
+        next = map[i];
+        break;
+      }
+    }
+
+    if (!next) {
+      // أكمل كل الدروس
+      if (nextBox) {
+        nextBox.style.display = '';
+        var title = nextBox.querySelector('[data-pd-next-title]');
+        var course = nextBox.querySelector('[data-pd-next-course]');
+        var link = nextBox.querySelector('[data-pd-next-link]');
+        var badge = nextBox.querySelector('.pd-next-badge');
+        if (title) title.textContent = '🎉 أكملت جميع دروس المنصة!';
+        if (course) course.textContent = 'أحسنت — يمكنك مراجعة أي دورة أو استلام شهاداتك.';
+        if (badge) badge.innerHTML = '<i class="fas fa-trophy"></i> اكتمل!';
+        if (link) {
+          link.href = '/courses';
+          link.innerHTML = 'استعرض الدورات <i class="fas fa-arrow-left"></i>';
+        }
+      }
+      if (emptyBox) emptyBox.style.display = 'none';
+      return;
+    }
+
+    if (nextBox) {
+      nextBox.style.display = '';
+      var t = nextBox.querySelector('[data-pd-next-title]');
+      var c = nextBox.querySelector('[data-pd-next-course]');
+      var l = nextBox.querySelector('[data-pd-next-link]');
+      if (t) t.textContent = next.title;
+      if (c) c.textContent = next.courseTitle;
+      if (l) l.href = next.url;
+    }
+    if (emptyBox) emptyBox.style.display = 'none';
+  }
+
+  // ---------- 15.3 خطوات الطريق العام (أشرطة تقدّم لكل دورة) ----------
+  function refreshRoadmapSteps() {
+    if (!window.MuhasibProgress) return;
+    document.querySelectorAll('[data-roadmap-step]').forEach(function (step) {
+      var ids = safeParse(step.getAttribute('data-course-lessons'), []);
+      var done = countDone(ids);
+      var pct = pctOf(done, ids.length);
+      var bar = step.querySelector('[data-roadmap-bar]');
+      if (bar) bar.style.width = pct + '%';
+      var pctEl = step.querySelector('[data-roadmap-pct]');
+      if (pctEl) {
+        if (pct === 100) pctEl.textContent = '✓ مكتملة';
+        else if (pct > 0) pctEl.textContent = pct + '% مكتمل';
+        else pctEl.textContent = 'لم تبدأ بعد';
+      }
+      if (pct === 100) step.classList.add('done');
+      else step.classList.remove('done');
+    });
+  }
+
+  // ---------- 15.4 مسار المحاسب اليمني ----------
+  function refreshYemeniPath() {
+    var path = document.querySelector('[data-yemeni-path]');
+    if (!path || !window.MuhasibProgress) return;
+
+    var pathIds = safeParse(path.getAttribute('data-path-lessons'), []);
+    var total = parseInt(path.getAttribute('data-path-total'), 10) || pathIds.length;
+    var done = countDone(pathIds);
+    var pct = pctOf(done, total);
+
+    var percentEl = path.querySelector('[data-ypath-percent]');
+    if (percentEl) percentEl.textContent = pct + '%';
+    var bar = path.querySelector('[data-ypath-bar]');
+    if (bar) bar.style.width = pct + '%';
+    var completedEl = path.querySelector('[data-ypath-completed]');
+    if (completedEl) completedEl.textContent = done.toLocaleString('ar-EG');
+
+    // خطوات المسار
+    path.querySelectorAll('[data-ypath-step]').forEach(function (step) {
+      var ids = safeParse(step.getAttribute('data-step-lessons'), []);
+      var sDone = countDone(ids);
+      var sPct = pctOf(sDone, ids.length);
+      var sBar = step.querySelector('[data-step-bar]');
+      if (sBar) sBar.style.width = sPct + '%';
+      var sPctEl = step.querySelector('[data-step-pct]');
+      if (sPctEl) sPctEl.textContent = sPct + '%';
+      if (sPct === 100) step.classList.add('completed');
+      else step.classList.remove('completed');
+    });
+
+    // شهادة المسار
+    var certLocked = path.querySelector('[data-ypath-cert-locked]');
+    var certBtn = path.querySelector('[data-ypath-cert-btn]');
+    if (pct === 100 && total > 0) {
+      if (certLocked) certLocked.style.display = 'none';
+      if (certBtn) certBtn.style.display = '';
+    } else {
+      if (certLocked) certLocked.style.display = '';
+      if (certBtn) certBtn.style.display = 'none';
+    }
+  }
+
+  // تشغيل لوحة التقدّم عند توفّر العناصر
+  if (document.querySelector('[data-progress-dashboard]') ||
+      document.querySelector('[data-yemeni-path]') ||
+      document.querySelector('[data-roadmap-step]')) {
+    refreshRoadmapSteps();
+    refreshProgressDashboard();
+    refreshYemeniPath();
+  }
+
   console.log('%c محاسب برو 📊 ', 'background:#1e3a8a;color:#fbbf24;font-size:16px;padding:6px 12px;border-radius:6px;font-weight:bold;');
 })();

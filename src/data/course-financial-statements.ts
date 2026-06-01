@@ -16,7 +16,7 @@ export const courseFinancialStatements: Course = {
   level: 'intermediate',
   icon: 'fa-file-invoice-dollar',
   color: 'linear-gradient(135deg, #0284c7 0%, #38bdf8 100%)',
-  duration: '15 ساعة',
+  duration: '19 ساعة',
   rating: 4.8,
   studentsCount: 12300,
   prerequisites: ['إتقان دورة أساسيات المحاسبة', 'فهم المعادلة المحاسبية والقيد المزدوج'],

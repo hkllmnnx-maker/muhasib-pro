@@ -32,10 +32,10 @@ export const ToolsPage = () => {
           </div>
           <div class="tool-fields">
             <label>إجمالي الأصول
-              <input type="number" id="eq-assets" placeholder="0" />
+              <input type="number" id="eq-assets" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
             <label>إجمالي الالتزامات
-              <input type="number" id="eq-liabilities" placeholder="0" />
+              <input type="number" id="eq-liabilities" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
           </div>
           <div class="tool-result">
@@ -56,13 +56,13 @@ export const ToolsPage = () => {
           </div>
           <div class="tool-fields">
             <label>تكلفة الأصل
-              <input type="number" id="dep-cost" placeholder="0" />
+              <input type="number" id="dep-cost" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
             <label>القيمة التخريدية (المتبقية)
-              <input type="number" id="dep-salvage" placeholder="0" />
+              <input type="number" id="dep-salvage" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
             <label>العمر الإنتاجي (سنوات)
-              <input type="number" id="dep-life" placeholder="1" />
+              <input type="number" id="dep-life" placeholder="1" min="0" step="any" inputmode="decimal" />
             </label>
           </div>
           <div class="tool-result-grid">
@@ -83,13 +83,13 @@ export const ToolsPage = () => {
           </div>
           <div class="tool-fields">
             <label>الإيرادات (المبيعات)
-              <input type="number" id="pr-revenue" placeholder="0" />
+              <input type="number" id="pr-revenue" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
             <label>تكلفة البضاعة المباعة
-              <input type="number" id="pr-cost" placeholder="0" />
+              <input type="number" id="pr-cost" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
             <label>المصروفات التشغيلية
-              <input type="number" id="pr-expenses" placeholder="0" />
+              <input type="number" id="pr-expenses" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
           </div>
           <div class="tool-result-grid">
@@ -111,13 +111,13 @@ export const ToolsPage = () => {
           </div>
           <div class="tool-fields">
             <label>التكاليف الثابتة
-              <input type="number" id="be-fixed" placeholder="0" />
+              <input type="number" id="be-fixed" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
             <label>سعر بيع الوحدة
-              <input type="number" id="be-price" placeholder="0" />
+              <input type="number" id="be-price" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
             <label>التكلفة المتغيرة للوحدة
-              <input type="number" id="be-variable" placeholder="0" />
+              <input type="number" id="be-variable" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
           </div>
           <div class="tool-result-grid">
@@ -138,19 +138,19 @@ export const ToolsPage = () => {
           </div>
           <div class="tool-fields tool-fields-row">
             <label>الأصول المتداولة
-              <input type="number" id="rt-current-assets" placeholder="0" />
+              <input type="number" id="rt-current-assets" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
             <label>المخزون
-              <input type="number" id="rt-inventory" placeholder="0" />
+              <input type="number" id="rt-inventory" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
             <label>الالتزامات المتداولة
-              <input type="number" id="rt-current-liab" placeholder="0" />
+              <input type="number" id="rt-current-liab" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
             <label>إجمالي الديون
-              <input type="number" id="rt-total-debt" placeholder="0" />
+              <input type="number" id="rt-total-debt" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
             <label>إجمالي حقوق الملكية
-              <input type="number" id="rt-total-equity" placeholder="0" />
+              <input type="number" id="rt-total-equity" placeholder="0" min="0" step="any" inputmode="decimal" />
             </label>
           </div>
           <div class="tool-result-grid">

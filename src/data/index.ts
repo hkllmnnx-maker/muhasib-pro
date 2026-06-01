@@ -1,4 +1,5 @@
-import type { Course, Lesson } from './types'
+import type { Course, Lesson, CourseCategory } from './types'
+import { courseCategoryMap } from './types'
 import { courseFundamentals } from './course-fundamentals'
 import { courseFinancialStatements } from './course-financial-statements'
 import { courseAdvanced } from './course-advanced'
@@ -19,7 +20,7 @@ import { courseCorporate } from './course-corporate'
 //  فهرس البيانات المركزي - جميع الدورات والدوال المساعدة
 // ==========================================================================
 
-export const courses: Course[] = [
+const rawCourses: Course[] = [
   courseFundamentals,
   courseFinancialStatements,
   courseAdvanced,
@@ -36,6 +37,59 @@ export const courses: Course[] = [
   courseBanking,
   courseCorporate,
 ]
+
+// حقن التصنيف الموضوعي لكل دورة من الخريطة التعليمية (لا يكسر أي بيانات موجودة)
+export const courses: Course[] = rawCourses.map((c) => ({
+  ...c,
+  category: c.category ?? courseCategoryMap[c.slug] ?? 'general',
+}))
+
+/** عدد الدورات ضمن كل تصنيف (للعرض في شرائح الفلترة) */
+export function countCoursesByCategory(category: CourseCategory): number {
+  return courses.filter((c) => c.category === category).length
+}
+
+/** نتيجة بحث موحّدة عبر الدورات والدروس */
+export interface SearchHit {
+  type: 'course' | 'lesson'
+  courseSlug: string
+  courseTitle: string
+  title: string
+  summary: string
+  href: string
+  category: CourseCategory
+}
+
+/** بناء فهرس بحث مسطّح يشمل الدورات والدروس (يُستخدم في الواجهة) */
+export function buildSearchIndex(): SearchHit[] {
+  const hits: SearchHit[] = []
+  courses.forEach((course) => {
+    const category = (course.category ?? 'general') as CourseCategory
+    hits.push({
+      type: 'course',
+      courseSlug: course.slug,
+      courseTitle: course.title,
+      title: course.title,
+      summary: course.description,
+      href: `/course/${course.slug}`,
+      category,
+    })
+    course.modules.forEach((mod) => {
+      mod.lessons.forEach((lesson) => {
+        hits.push({
+          type: 'lesson',
+          courseSlug: course.slug,
+          courseTitle: course.shortTitle,
+          title: lesson.title,
+          summary: lesson.summary,
+          href: `/course/${course.slug}/${lesson.slug}`,
+          category,
+        })
+      })
+    })
+  })
+  return hits
+}
 
 /** إيجاد دورة بالـ slug */
 export function getCourseBySlug(slug: string): Course | undefined {

@@ -433,92 +433,312 @@
   // ---------- 13. الأدوات الحاسبية ----------
   initCalculators();
   function initCalculators() {
-    // أداة المعادلة المحاسبية
-    const eqForm = document.getElementById('tool-equation');
+    // ===== دوال مساعدة آمنة =====
+    // قراءة رقم من حقل بأمان: ترجع 0 لأي قيمة غير صالحة (NaN/فارغة/لانهائية)
+    function num(id) {
+      var el = document.getElementById(id);
+      if (!el) return 0;
+      var v = parseFloat(el.value);
+      if (!isFinite(v) || isNaN(v)) return 0;
+      return v;
+    }
+    // قراءة رقم موجب فقط (يمنع السالب)، يستخدم في الحقول التي يجب ألا تكون سالبة
+    function posNum(id) {
+      var v = num(id);
+      return v < 0 ? 0 : v;
+    }
+    // تنسيق رقم عربي مع منع NaN نهائيًا
+    function fmt(value, digits) {
+      if (!isFinite(value) || isNaN(value)) value = 0;
+      return value.toLocaleString('ar-EG', { maximumFractionDigits: digits == null ? 2 : digits });
+    }
+    // تنسيق نسبة مئوية بأمان
+    function pct(value, digits) {
+      if (!isFinite(value) || isNaN(value)) value = 0;
+      return value.toFixed(digits == null ? 1 : digits) + '٪';
+    }
+    // قسمة آمنة: ترجع 0 إذا كان المقام صفرًا أو غير صالح
+    function safeDiv(a, b) {
+      if (!isFinite(b) || isNaN(b) || b === 0) return 0;
+      var r = a / b;
+      return isFinite(r) ? r : 0;
+    }
+    function setStatus(id, msg, isWarn) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = msg;
+      el.classList.toggle('tool-status-warn', !!isWarn);
+    }
+
+    // === أداة المعادلة المحاسبية ===
+    var eqForm = document.getElementById('tool-equation');
     if (eqForm) {
-      eqForm.addEventListener('input', function () {
-        const assets = parseFloat(document.getElementById('eq-assets').value) || 0;
-        const liabilities = parseFloat(document.getElementById('eq-liabilities').value) || 0;
-        const equity = assets - liabilities;
-        const out = document.getElementById('eq-result');
-        if (out) out.textContent = equity.toLocaleString('ar-EG');
-        const status = document.getElementById('eq-status');
-        if (status) {
-          status.innerHTML = 'الأصول (' + assets.toLocaleString('ar-EG') + ') = الالتزامات (' +
-            liabilities.toLocaleString('ar-EG') + ') + حقوق الملكية (' + equity.toLocaleString('ar-EG') + ')';
-        }
-      });
+      var calcEq = function () {
+        var assets = posNum('eq-assets');
+        var liabilities = posNum('eq-liabilities');
+        var equity = assets - liabilities;
+        setText('eq-result', fmt(equity));
+        setStatus('eq-status',
+          'الأصول (' + fmt(assets) + ') = الالتزامات (' + fmt(liabilities) +
+          ') + حقوق الملكية (' + fmt(equity) + ')',
+          equity < 0);
+      };
+      eqForm.addEventListener('input', calcEq);
+      calcEq();
     }
 
-    // أداة الإهلاك (القسط الثابت)
-    const depForm = document.getElementById('tool-depreciation');
+    // === أداة الإهلاك (القسط الثابت) ===
+    var depForm = document.getElementById('tool-depreciation');
     if (depForm) {
-      depForm.addEventListener('input', function () {
-        const cost = parseFloat(document.getElementById('dep-cost').value) || 0;
-        const salvage = parseFloat(document.getElementById('dep-salvage').value) || 0;
-        const life = parseFloat(document.getElementById('dep-life').value) || 1;
-        const annual = (cost - salvage) / life;
-        const rate = cost ? ((annual / cost) * 100) : 0;
-        setText('dep-annual', annual.toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
-        setText('dep-monthly', (annual / 12).toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
-        setText('dep-rate', rate.toFixed(2) + '٪');
-      });
+      var calcDep = function () {
+        var cost = posNum('dep-cost');
+        var salvage = posNum('dep-salvage');
+        var life = posNum('dep-life');
+        // تحقق من المدخلات
+        if (life <= 0) {
+          setText('dep-annual', fmt(0));
+          setText('dep-monthly', fmt(0));
+          setText('dep-rate', pct(0));
+          setStatus('dep-status', 'أدخل عمرًا إنتاجيًا أكبر من صفر', true);
+          return;
+        }
+        if (salvage > cost) {
+          setText('dep-annual', fmt(0));
+          setText('dep-monthly', fmt(0));
+          setText('dep-rate', pct(0));
+          setStatus('dep-status', 'القيمة التخريدية يجب ألا تتجاوز تكلفة الأصل', true);
+          return;
+        }
+        var base = cost - salvage;
+        var annual = safeDiv(base, life);
+        var rate = safeDiv(annual, cost) * 100;
+        setText('dep-annual', fmt(annual));
+        setText('dep-monthly', fmt(annual / 12));
+        setText('dep-rate', pct(rate, 2));
+        setStatus('dep-status',
+          'القيمة القابلة للإهلاك = ' + fmt(base) + ' موزّعة على ' + fmt(life, 0) + ' سنة', false);
+      };
+      depForm.addEventListener('input', calcDep);
+      calcDep();
     }
 
-    // أداة هامش الربح
-    const profitForm = document.getElementById('tool-profit');
+    // === أداة الربحية ===
+    var profitForm = document.getElementById('tool-profit');
     if (profitForm) {
-      profitForm.addEventListener('input', function () {
-        const revenue = parseFloat(document.getElementById('pr-revenue').value) || 0;
-        const cost = parseFloat(document.getElementById('pr-cost').value) || 0;
-        const expenses = parseFloat(document.getElementById('pr-expenses').value) || 0;
-        const grossProfit = revenue - cost;
-        const netProfit = grossProfit - expenses;
-        const grossMargin = revenue ? (grossProfit / revenue) * 100 : 0;
-        const netMargin = revenue ? (netProfit / revenue) * 100 : 0;
-        setText('pr-gross', grossProfit.toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
-        setText('pr-net', netProfit.toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
-        setText('pr-gross-margin', grossMargin.toFixed(1) + '٪');
-        setText('pr-net-margin', netMargin.toFixed(1) + '٪');
-      });
+      var calcProfit = function () {
+        var revenue = posNum('pr-revenue');
+        var cost = posNum('pr-cost');
+        var expenses = posNum('pr-expenses');
+        var grossProfit = revenue - cost;
+        var netProfit = grossProfit - expenses;
+        var grossMargin = safeDiv(grossProfit, revenue) * 100;
+        var netMargin = safeDiv(netProfit, revenue) * 100;
+        setText('pr-gross', fmt(grossProfit));
+        setText('pr-net', fmt(netProfit));
+        setText('pr-gross-margin', pct(grossMargin));
+        setText('pr-net-margin', pct(netMargin));
+      };
+      profitForm.addEventListener('input', calcProfit);
+      calcProfit();
     }
 
-    // أداة نقطة التعادل
-    const beForm = document.getElementById('tool-breakeven');
+    // === أداة نقطة التعادل ===
+    var beForm = document.getElementById('tool-breakeven');
     if (beForm) {
-      beForm.addEventListener('input', function () {
-        const fixed = parseFloat(document.getElementById('be-fixed').value) || 0;
-        const price = parseFloat(document.getElementById('be-price').value) || 0;
-        const varCost = parseFloat(document.getElementById('be-variable').value) || 0;
-        const contribution = price - varCost;
-        const beUnits = contribution > 0 ? fixed / contribution : 0;
-        const beSales = beUnits * price;
-        setText('be-contribution', contribution.toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
-        setText('be-units', Math.ceil(beUnits).toLocaleString('ar-EG'));
-        setText('be-sales', beSales.toLocaleString('ar-EG', { maximumFractionDigits: 2 }));
-      });
+      var calcBE = function () {
+        var fixed = posNum('be-fixed');
+        var price = posNum('be-price');
+        var varCost = posNum('be-variable');
+        var contribution = price - varCost;
+        setText('be-contribution', fmt(contribution));
+        if (contribution <= 0) {
+          setText('be-units', fmt(0, 0));
+          setText('be-sales', fmt(0));
+          setStatus('be-status', 'يجب أن يكون سعر البيع أكبر من التكلفة المتغيرة لتحقيق هامش مساهمة موجب', true);
+          return;
+        }
+        var beUnits = safeDiv(fixed, contribution);
+        var beSales = beUnits * price;
+        setText('be-units', fmt(Math.ceil(beUnits), 0));
+        setText('be-sales', fmt(beSales));
+        setStatus('be-status', 'تتعادل المنشأة عند بيع ' + fmt(Math.ceil(beUnits), 0) + ' وحدة', false);
+      };
+      beForm.addEventListener('input', calcBE);
+      calcBE();
     }
 
-    // أداة النسب المالية
-    const ratioForm = document.getElementById('tool-ratios');
+    // === أداة هامش المساهمة ===
+    var cmForm = document.getElementById('tool-contribution');
+    if (cmForm) {
+      var calcCM = function () {
+        var price = posNum('cm-price');
+        var varCost = posNum('cm-variable');
+        var units = posNum('cm-units');
+        var unitCM = price - varCost;
+        var totalCM = unitCM * units;
+        var ratio = safeDiv(unitCM, price) * 100;
+        setText('cm-unit', fmt(unitCM));
+        setText('cm-total', fmt(totalCM));
+        setText('cm-ratio', pct(ratio));
+        if (unitCM < 0) {
+          setStatus('cm-status', 'هامش المساهمة سالب: التكلفة المتغيرة تتجاوز سعر البيع', true);
+        } else {
+          setStatus('cm-status', 'هامش المساهمة = سعر البيع − التكلفة المتغيرة', false);
+        }
+      };
+      cmForm.addEventListener('input', calcCM);
+      calcCM();
+    }
+
+    // === أداة النسب المالية (السيولة + الربحية + الرافعة) ===
+    var ratioForm = document.getElementById('tool-ratios');
     if (ratioForm) {
-      ratioForm.addEventListener('input', function () {
-        const currentAssets = parseFloat(document.getElementById('rt-current-assets').value) || 0;
-        const inventory = parseFloat(document.getElementById('rt-inventory').value) || 0;
-        const currentLiab = parseFloat(document.getElementById('rt-current-liab').value) || 0;
-        const totalDebt = parseFloat(document.getElementById('rt-total-debt').value) || 0;
-        const totalEquity = parseFloat(document.getElementById('rt-total-equity').value) || 0;
-        const currentRatio = currentLiab ? currentAssets / currentLiab : 0;
-        const quickRatio = currentLiab ? (currentAssets - inventory) / currentLiab : 0;
-        const debtToEquity = totalEquity ? totalDebt / totalEquity : 0;
-        setText('rt-current', currentRatio.toFixed(2));
-        setText('rt-quick', quickRatio.toFixed(2));
-        setText('rt-debt-equity', debtToEquity.toFixed(2));
-      });
+      var calcRatios = function () {
+        var currentAssets = posNum('rt-current-assets');
+        var inventory = posNum('rt-inventory');
+        var cash = posNum('rt-cash');
+        var currentLiab = posNum('rt-current-liab');
+        var totalDebt = posNum('rt-total-debt');
+        var totalEquity = posNum('rt-total-equity');
+        var netIncome = num('rt-net-income'); // قد يكون سالبًا (خسارة)
+        var totalAssets = posNum('rt-total-assets');
+
+        var currentRatio = safeDiv(currentAssets, currentLiab);
+        var quickRatio = safeDiv(currentAssets - inventory, currentLiab);
+        var cashRatio = safeDiv(cash, currentLiab);
+        var debtToEquity = safeDiv(totalDebt, totalEquity);
+        var roa = safeDiv(netIncome, totalAssets) * 100;
+        var roe = safeDiv(netIncome, totalEquity) * 100;
+
+        setText('rt-current', fmt(currentRatio, 2));
+        setText('rt-quick', fmt(quickRatio, 2));
+        setText('rt-cash-ratio', fmt(cashRatio, 2));
+        setText('rt-debt-equity', fmt(debtToEquity, 2));
+        setText('rt-roa', pct(roa));
+        setText('rt-roe', pct(roe));
+
+        // ملاحظة إرشادية مبسطة عن السيولة
+        var note;
+        if (currentLiab === 0) {
+          note = 'أدخل الالتزامات المتداولة لحساب نسب السيولة';
+        } else if (currentRatio >= 2) {
+          note = 'نسبة تداول جيدة (≥ 2): سيولة مريحة لتغطية الالتزامات قصيرة الأجل';
+        } else if (currentRatio >= 1) {
+          note = 'نسبة تداول مقبولة (1–2): تغطية كافية مع متابعة السيولة';
+        } else {
+          note = 'تنبيه: نسبة التداول أقل من 1 — قد تواجه المنشأة ضغطًا في السيولة';
+        }
+        setStatus('rt-status', note, currentLiab !== 0 && currentRatio < 1);
+      };
+      ratioForm.addEventListener('input', calcRatios);
+      calcRatios();
+    }
+
+    // === أداة ضريبة المبيعات التعليمية ===
+    var vatForm = document.getElementById('tool-vat');
+    if (vatForm) {
+      var calcVAT = function () {
+        var amount = posNum('vat-amount');
+        var rateInput = posNum('vat-rate');
+        // حصر النسبة بين 0 و 100 لمنع نتائج غير منطقية
+        var rate = Math.min(Math.max(rateInput, 0), 100);
+        var modeEl = vatForm.querySelector('input[name="vat-mode"]:checked');
+        var mode = modeEl ? modeEl.value : 'exclusive';
+
+        var net = 0, tax = 0, gross = 0;
+        if (mode === 'inclusive') {
+          // المبلغ شامل الضريبة: نفصل الضريبة منه
+          gross = amount;
+          net = safeDiv(amount, (1 + rate / 100));
+          tax = gross - net;
+        } else {
+          // المبلغ بدون ضريبة: نضيف الضريبة
+          net = amount;
+          tax = net * (rate / 100);
+          gross = net + tax;
+        }
+        setText('vat-net', fmt(net));
+        setText('vat-tax', fmt(tax));
+        setText('vat-gross', fmt(gross));
+      };
+      vatForm.addEventListener('input', calcVAT);
+      calcVAT();
+    }
+
+    // === أداة كشف الرواتب التعليمية ===
+    var payForm = document.getElementById('tool-payroll');
+    if (payForm) {
+      var calcPay = function () {
+        var basic = posNum('pay-basic');
+        var allow = posNum('pay-allow');
+        var insRate = Math.min(Math.max(posNum('pay-insurance'), 0), 100);
+        var taxRate = Math.min(Math.max(posNum('pay-tax'), 0), 100);
+        var other = posNum('pay-other');
+
+        var gross = basic + allow;
+        // التأمينات تُحسب عادة على الراتب الأساسي (نموذج تعليمي مبسّط)
+        var insAmount = basic * (insRate / 100);
+        // وعاء الضريبة (تعليمي مبسّط): الإجمالي بعد خصم التأمينات
+        var taxBase = gross - insAmount;
+        if (taxBase < 0) taxBase = 0;
+        var taxAmount = taxBase * (taxRate / 100);
+        var totalDeductions = insAmount + taxAmount + other;
+        var net = gross - totalDeductions;
+        if (!isFinite(net) || isNaN(net)) net = 0;
+
+        setText('pay-gross', fmt(gross));
+        setText('pay-ins-amount', fmt(insAmount));
+        setText('pay-tax-amount', fmt(taxAmount));
+        setText('pay-deductions', fmt(totalDeductions));
+        setText('pay-net', fmt(net < 0 ? 0 : net));
+      };
+      payForm.addEventListener('input', calcPay);
+      calcPay();
+    }
+
+    // === أداة تحويل ميزان المراجعة إلى قائمة دخل ===
+    var isForm = document.getElementById('tool-income-statement');
+    if (isForm) {
+      var calcIS = function () {
+        var sales = posNum('is-sales');
+        var returns = posNum('is-returns');
+        var cogs = posNum('is-cogs');
+        var admin = posNum('is-admin');
+        var selling = posNum('is-selling');
+        var otherIncome = posNum('is-other-income');
+        var finance = posNum('is-finance');
+
+        var netSales = sales - returns;
+        var grossProfit = netSales - cogs;
+        var operatingExp = admin + selling;
+        var operatingProfit = grossProfit - operatingExp;
+        var netProfit = operatingProfit + otherIncome - finance;
+
+        setText('is-net-sales', fmt(netSales));
+        setText('is-cogs-out', fmt(cogs));
+        setText('is-gross-profit', fmt(grossProfit));
+        setText('is-operating-exp', fmt(operatingExp));
+        setText('is-operating-profit', fmt(operatingProfit));
+        setText('is-other-out', fmt(otherIncome));
+        setText('is-finance-out', fmt(finance));
+        setText('is-net-profit', fmt(netProfit));
+
+        // تلوين صف صافي الربح حسب النتيجة
+        var netRow = document.getElementById('is-net-profit');
+        if (netRow) {
+          netRow.style.color = netProfit < 0 ? 'var(--color-danger, #dc2626)' : 'var(--color-success, #16a34a)';
+        }
+        var msg = netProfit < 0
+          ? 'النتيجة: خسارة صافية بمقدار ' + fmt(Math.abs(netProfit))
+          : 'النتيجة: صافي ربح بمقدار ' + fmt(netProfit);
+        setStatus('is-status', msg, netProfit < 0);
+      };
+      isForm.addEventListener('input', calcIS);
+      calcIS();
     }
   }
   function setText(id, value) {
-    const el = document.getElementById(id);
+    var el = document.getElementById(id);
     if (el) el.textContent = value;
   }
 

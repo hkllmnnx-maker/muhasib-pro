@@ -80,6 +80,9 @@ export interface Course {
   tags: string[]
 }
 
+/** مستوى صعوبة سؤال الاختبار */
+export type QuizDifficulty = 'easy' | 'medium' | 'hard'
+
 /** سؤال اختبار */
 export interface QuizQuestion {
   id: string
@@ -87,6 +90,17 @@ export interface QuizQuestion {
   options: string[]
   correctIndex: number
   explanation: string
+  /** مستوى صعوبة السؤال (اختياري للتوافق مع الأسئلة القديمة) */
+  difficulty?: QuizDifficulty
+  /** مصدر موثوق للسؤال — إلزامي للأسئلة القانونية/الضريبية */
+  source?: string
+}
+
+/** أسماء مستويات الصعوبة بالعربية */
+export const difficultyNames: Record<QuizDifficulty, string> = {
+  easy: 'سهل',
+  medium: 'متوسط',
+  hard: 'صعب',
 }
 
 /** اختبار */

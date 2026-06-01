@@ -1,7 +1,9 @@
 import { html } from 'hono/html'
 import { Layout } from '../components/layout'
 import { courses, countLessons } from '../data'
-import { levelNames } from '../data/types'
+import { levelNames, categoryNames } from '../data/types'
+
+const yemenCategories = ['yemeni', 'yemeni-tax', 'governmental']
 
 // ==========================================================================
 //  صفحة مسار التعلّم (Roadmap Page)
@@ -20,12 +22,31 @@ export const RoadmapPage = () => {
       </div>
     </section>
 
+    <!-- شريط مسار المحاسب اليمني -->
+    <section class="section" style="padding-bottom:0">
+      <div class="container">
+        <div class="yemen-banner reveal">
+          <span class="yemen-banner-icon"><i class="fas fa-mosque"></i></span>
+          <div class="yemen-banner-text">
+            <strong>مسار المحاسب اليمني ضمن خارطة الطريق</strong>
+            <p>
+              المراحل المعلّمة بشارة <span class="yemen-tag-inline"><i class="fas fa-mosque"></i> يمني</span>
+              تركّز على التطبيق التعليمي في الجمهورية اليمنية. للوصول السريع لكل المحتوى اليمني،
+              <a href="/courses?cat=yemeni">تصفّح تصنيف المحاسبة اليمنية</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section">
       <div class="container">
         <div class="roadmap">
           ${courses.map(
-            (course, idx) => html`
-              <div class="roadmap-step reveal" style="--course-color:${course.color}">
+            (course, idx) => {
+              const isYemen = yemenCategories.indexOf(course.category || '') !== -1
+              return html`
+              <div class="roadmap-step reveal ${isYemen ? 'roadmap-step-yemen' : ''}" style="--course-color:${course.color}">
                 <div class="roadmap-marker" style="background:${course.color}">
                   <span class="roadmap-step-num">${idx + 1}</span>
                   <i class="fas ${course.icon}"></i>
@@ -33,6 +54,9 @@ export const RoadmapPage = () => {
                 <div class="roadmap-card">
                   <div class="roadmap-card-head">
                     <span class="roadmap-level" style="background:${course.color}">${levelNames[course.level]}</span>
+                    ${isYemen
+                      ? html`<span class="roadmap-yemen-tag"><i class="fas fa-mosque"></i> ${categoryNames[course.category!]}</span>`
+                      : ''}
                     <span class="roadmap-duration"><i class="fas fa-clock"></i> ${course.duration}</span>
                   </div>
                   <h3>${course.title}</h3>
@@ -50,6 +74,7 @@ export const RoadmapPage = () => {
                 </div>
               </div>
             `
+            }
           )}
 
           <div class="roadmap-step roadmap-final reveal">

@@ -1,7 +1,7 @@
 import { html } from 'hono/html'
 import { Layout } from '../components/layout'
-import { courses, getPlatformStats } from '../data'
-import { levelNames } from '../data/types'
+import { courses, getPlatformStats, countCoursesByCategory } from '../data'
+import { levelNames, categoryList } from '../data/types'
 import { countLessons } from '../data'
 
 // ==========================================================================
@@ -17,14 +17,14 @@ export const HomePage = () => {
       <div class="hero-grid-pattern"></div>
       <div class="container hero-inner">
         <div class="hero-text">
-          <span class="hero-badge"><i class="fas fa-star"></i> المنصة العربية الأولى لتعليم المحاسبة</span>
+          <span class="hero-badge"><i class="fas fa-star"></i> منصة عربية تخدم المحاسب — وبتركيز على الجمهورية اليمنية</span>
           <h1 class="hero-title">
             تعلّم <span class="highlight">المحاسبة المالية</span><br />
             من الصفر إلى الاحتراف
           </h1>
           <p class="hero-desc">
-            رحلة تعليمية متكاملة بأسلوب عصري وأمثلة عملية وأدوات تفاعلية،
-            تأخذك من المفاهيم الأساسية حتى مستوى الاحتراف والشهادات المهنية — مجاناً وبالكامل بالعربية.
+            رحلة تعليمية متكاملة بأسلوب عصري وأمثلة عملية وأدوات تفاعلية، مصمّمة للمحاسب العربي
+            ومع مسار تعليمي خاص بالمحاسب اليمني — تأخذك من المفاهيم الأساسية حتى الاحتراف، مجاناً وبالكامل بالعربية.
           </p>
           <div class="hero-actions">
             <a href="/courses" class="btn btn-accent btn-lg">
@@ -108,6 +108,79 @@ export const HomePage = () => {
             <div class="stat-value"><span data-counter="5">0</span></div>
             <div class="stat-label">أداة حاسبية</div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- مسار المحاسب اليمني (مميّز) -->
+    <section class="section">
+      <div class="container">
+        <div class="yemen-path reveal">
+          <div class="yemen-path-pattern"></div>
+          <div class="yemen-path-inner">
+            <div class="yemen-path-text">
+              <span class="yemen-path-badge"><i class="fas fa-mosque"></i> مسار خاص</span>
+              <h2 class="yemen-path-title">مسار المحاسب اليمني</h2>
+              <p class="yemen-path-desc">
+                محتوى تعليمي عربي موجّه لمن يعمل في المحاسبة داخل الجمهورية اليمنية: من الأساسيات
+                إلى التصنيفات التعليمية الخاصة باليمن — محاسبة يمنية، ضرائب يمنية، ومحاسبة حكومية يمنية —
+                لتطبّق ما تتعلّمه في بيئة عملك بأسلوب عملي.
+              </p>
+              <p class="yemen-path-note">
+                <i class="fas fa-circle-info"></i>
+                هذه التصنيفات تعليمية لتنظيم المحتوى وتسهيل البحث، ولا تُغني عن التشريعات الرسمية أو الاستشارة المهنية.
+              </p>
+              <div class="yemen-path-actions">
+                <a href="/courses?cat=yemeni" class="btn btn-accent btn-lg">
+                  <i class="fas fa-graduation-cap"></i> ابدأ مسار المحاسب اليمني
+                </a>
+                <a href="/roadmap" class="btn btn-outline btn-lg" style="color:#fff;border-color:rgba(255,255,255,.45)">
+                  <i class="fas fa-route"></i> خارطة الطريق الكاملة
+                </a>
+              </div>
+            </div>
+            <div class="yemen-path-cats">
+              ${categoryList
+                .filter((c) => c.key === 'yemeni' || c.key === 'yemeni-tax' || c.key === 'governmental')
+                .map(
+                  (cat) => html`
+                    <a href="/courses?cat=${cat.key}" class="yemen-cat-card">
+                      <span class="yemen-cat-icon"><i class="fas ${cat.icon}"></i></span>
+                      <div>
+                        <strong>${cat.label}</strong>
+                        <span>${countCoursesByCategory(cat.key)} دورة تعليمية</span>
+                      </div>
+                      <i class="fas fa-arrow-left yemen-cat-arrow"></i>
+                    </a>
+                  `
+                )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- تصفّح حسب التصنيف -->
+    <section class="section" style="background:var(--bg-surface)">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-badge"><i class="fas fa-tags"></i> تصفّح حسب التصنيف</span>
+          <h2 class="section-title">اختر المجال الذي يهمّك</h2>
+          <p class="section-subtitle">
+            تصنيفات تعليمية تنظّم الدورات وتسهّل عليك الوصول السريع لما تحتاجه — للمحاسب العربي واليمني.
+          </p>
+        </div>
+        <div class="category-grid">
+          ${categoryList.map(
+            (cat) => html`
+              <a href="/courses?cat=${cat.key}" class="category-tile reveal" style="--cat-color:${cat.color}">
+                <span class="category-tile-icon"><i class="fas ${cat.icon}"></i></span>
+                <h3 class="category-tile-title">${cat.label}</h3>
+                <p class="category-tile-desc">${cat.description}</p>
+                <span class="category-tile-count"><i class="fas fa-book-open"></i> ${countCoursesByCategory(cat.key)} دورة</span>
+              </a>
+            `
+          )}
         </div>
       </div>
     </section>

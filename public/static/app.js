@@ -131,26 +131,125 @@
     });
   });
 
-  // ---------- 7. فلترة الدورات ----------
-  const filterTabs = document.querySelectorAll('.filter-tab');
-  filterTabs.forEach(function (tab) {
-    tab.addEventListener('click', function () {
-      const filter = tab.getAttribute('data-filter');
-      filterTabs.forEach(function (t) {
-        t.classList.remove('active');
-      });
-      tab.classList.add('active');
-      document.querySelectorAll('[data-course-card]').forEach(function (card) {
+  // ---------- 7. بحث وفلترة الدورات (تصنيف + مستوى + بحث نصّي) ----------
+  (function initCoursesExplorer() {
+    const grid = document.getElementById('courses-grid');
+    if (!grid) return;
+
+    const searchInput = document.getElementById('courses-search-input');
+    const clearBtn = document.getElementById('courses-search-clear');
+    const categoryBar = document.getElementById('course-category-bar');
+    const levelBar = document.getElementById('course-level-bar');
+    const emptyState = document.getElementById('courses-empty-state');
+    const resetBtn = document.getElementById('courses-reset-filters');
+    const visibleCountEl = document.getElementById('courses-visible-count');
+    const cards = Array.prototype.slice.call(grid.querySelectorAll('[data-course-card]'));
+    const totalCount = cards.length;
+
+    const state = { query: '', category: 'all', level: 'all' };
+
+    function normalize(str) {
+      // توحيد البحث العربي: إزالة التشكيل وتوحيد الألف والياء والتاء المربوطة
+      return (str || '')
+        .toString()
+        .toLowerCase()
+        .replace(/[\u064B-\u0652]/g, '')
+        .replace(/[إأآ]/g, 'ا')
+        .replace(/ى/g, 'ي')
+        .replace(/ة/g, 'ه')
+        .trim();
+    }
+
+    function applyFilters() {
+      const q = normalize(state.query);
+      let visible = 0;
+      cards.forEach(function (card) {
         const level = card.getAttribute('data-level');
-        if (filter === 'all' || level === filter) {
+        const category = card.getAttribute('data-category');
+        const haystack = normalize(card.getAttribute('data-search'));
+        const matchQuery = !q || haystack.indexOf(q) !== -1;
+        const matchCategory = state.category === 'all' || category === state.category;
+        const matchLevel = state.level === 'all' || level === state.level;
+        if (matchQuery && matchCategory && matchLevel) {
           card.style.display = '';
-          card.classList.add('fade-in');
+          card.classList.add('visible');
+          visible++;
         } else {
           card.style.display = 'none';
         }
       });
-    });
-  });
+      if (emptyState) emptyState.hidden = visible !== 0;
+      if (visibleCountEl) visibleCountEl.textContent = visible;
+      if (clearBtn) clearBtn.hidden = !state.query;
+    }
+
+    function setActiveChip(bar, attr, value) {
+      if (!bar) return;
+      bar.querySelectorAll('.filter-chip').forEach(function (chip) {
+        const isActive = chip.getAttribute(attr) === value;
+        chip.classList.toggle('active', isActive);
+        chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        state.query = searchInput.value;
+        applyFilters();
+      });
+    }
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        state.query = '';
+        if (searchInput) {
+          searchInput.value = '';
+          searchInput.focus();
+        }
+        applyFilters();
+      });
+    }
+    if (categoryBar) {
+      categoryBar.addEventListener('click', function (e) {
+        const chip = e.target.closest('.filter-chip');
+        if (!chip) return;
+        state.category = chip.getAttribute('data-category');
+        setActiveChip(categoryBar, 'data-category', state.category);
+        applyFilters();
+      });
+    }
+    if (levelBar) {
+      levelBar.addEventListener('click', function (e) {
+        const chip = e.target.closest('.filter-chip');
+        if (!chip) return;
+        state.level = chip.getAttribute('data-level');
+        setActiveChip(levelBar, 'data-level', state.level);
+        applyFilters();
+      });
+    }
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        state.query = '';
+        state.category = 'all';
+        state.level = 'all';
+        if (searchInput) searchInput.value = '';
+        setActiveChip(categoryBar, 'data-category', 'all');
+        setActiveChip(levelBar, 'data-level', 'all');
+        applyFilters();
+      });
+    }
+
+    // دعم التصفية المسبقة عبر بارامتر URL مثل /courses?cat=yemeni
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const cat = params.get('cat');
+      if (cat && categoryBar && categoryBar.querySelector('[data-category="' + cat + '"]')) {
+        state.category = cat;
+        setActiveChip(categoryBar, 'data-category', cat);
+      }
+    } catch (e) {}
+
+    applyFilters();
+  })();
 
   // ---------- 8. القائمة الجانبية للدروس (طي/فتح الوحدات) ----------
   document.querySelectorAll('.sidebar-module-title').forEach(function (title) {

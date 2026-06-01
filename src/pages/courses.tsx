@@ -1,10 +1,11 @@
 import { html } from 'hono/html'
 import { Layout } from '../components/layout'
-import { courses, countLessons } from '../data'
-import { levelNames } from '../data/types'
+import { courses, countLessons, countCoursesByCategory } from '../data'
+import { levelNames, categoryList } from '../data/types'
 
 // ==========================================================================
 //  صفحة قائمة الدورات (Courses Listing Page)
+//  محسّنة: بحث فوري + تصنيفات موضوعية + فلترة بالمستوى + حالة فارغة
 // ==========================================================================
 
 export const CoursesPage = () => {
@@ -15,31 +16,86 @@ export const CoursesPage = () => {
         <span class="page-hero-badge"><i class="fas fa-graduation-cap"></i> الدورات التعليمية</span>
         <h1 class="page-hero-title">مسارك المتكامل لإتقان المحاسبة المالية</h1>
         <p class="page-hero-desc">
-          أربع دورات متدرّجة بعناية تأخذك خطوة بخطوة من أول مفهوم محاسبي حتى المستوى الاحترافي،
-          مع أمثلة محلولة وقيود عملية واختبارات لكل مرحلة.
+          محتوى تعليمي عربي موجّه للمحاسب العربي وبصفة خاصة في الجمهورية اليمنية،
+          منظّم في تصنيفات واضحة مع بحث فوري يأخذك مباشرة إلى الدورة أو الدرس الذي تريده.
         </p>
       </div>
     </section>
 
-    <!-- شريط الفلترة -->
-    <section class="section">
+    <!-- أدوات البحث والفلترة -->
+    <section class="section section-courses">
       <div class="container">
-        <div class="filter-bar" id="course-filter-bar">
-          <button class="filter-chip active" data-filter="all"><i class="fas fa-layer-group"></i> الكل</button>
-          <button class="filter-chip" data-filter="beginner"><i class="fas fa-seedling"></i> مبتدئ</button>
-          <button class="filter-chip" data-filter="intermediate"><i class="fas fa-chart-line"></i> متوسط</button>
-          <button class="filter-chip" data-filter="advanced"><i class="fas fa-gem"></i> متقدم</button>
-          <button class="filter-chip" data-filter="professional"><i class="fas fa-award"></i> احترافي</button>
+        <!-- صندوق البحث -->
+        <div class="search-box" role="search">
+          <i class="fas fa-magnifying-glass search-box-icon" aria-hidden="true"></i>
+          <input
+            type="search"
+            id="courses-search-input"
+            class="search-box-input"
+            placeholder="ابحث عن دورة بالاسم أو الموضوع أو الوسوم..."
+            aria-label="بحث في الدورات"
+            autocomplete="off"
+          />
+          <button type="button" class="search-box-clear" id="courses-search-clear" aria-label="مسح البحث" hidden>
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- تصنيفات موضوعية -->
+        <div class="filter-section" aria-label="تصنيفات الدورات">
+          <span class="filter-label"><i class="fas fa-tags"></i> التصنيف:</span>
+          <div class="filter-bar" id="course-category-bar" role="group" aria-label="تصفية حسب التصنيف">
+            <button class="filter-chip active" data-category="all" aria-pressed="true">
+              <i class="fas fa-layer-group"></i> الكل
+              <span class="chip-count">${courses.length}</span>
+            </button>
+            ${categoryList.map(
+              (cat) => html`
+                <button class="filter-chip" data-category="${cat.key}" aria-pressed="false">
+                  <i class="fas ${cat.icon}"></i> ${cat.label}
+                  <span class="chip-count">${countCoursesByCategory(cat.key)}</span>
+                </button>
+              `
+            )}
+          </div>
+        </div>
+
+        <!-- فلترة بالمستوى -->
+        <div class="filter-section" aria-label="مستوى الدورات">
+          <span class="filter-label"><i class="fas fa-signal"></i> المستوى:</span>
+          <div class="filter-bar" id="course-level-bar" role="group" aria-label="تصفية حسب المستوى">
+            <button class="filter-chip filter-chip-sm active" data-level="all" aria-pressed="true"><i class="fas fa-list"></i> الكل</button>
+            <button class="filter-chip filter-chip-sm" data-level="beginner" aria-pressed="false"><i class="fas fa-seedling"></i> مبتدئ</button>
+            <button class="filter-chip filter-chip-sm" data-level="intermediate" aria-pressed="false"><i class="fas fa-chart-line"></i> متوسط</button>
+            <button class="filter-chip filter-chip-sm" data-level="advanced" aria-pressed="false"><i class="fas fa-gem"></i> متقدم</button>
+            <button class="filter-chip filter-chip-sm" data-level="professional" aria-pressed="false"><i class="fas fa-award"></i> احترافي</button>
+          </div>
+        </div>
+
+        <!-- عدّاد النتائج -->
+        <div class="results-summary" id="courses-results-summary" aria-live="polite">
+          عرض <strong id="courses-visible-count">${courses.length}</strong> من ${courses.length} دورة
         </div>
 
         <div class="courses-grid" id="courses-grid">
           ${courses.map(
-            (course, idx) => html`
-              <article class="course-card reveal" data-level="${course.level}" style="--course-color:${course.color};--delay:${idx * 0.08}s">
+            (course, idx) => {
+              const cat = categoryList.find((c) => c.key === course.category)
+              return html`
+              <article
+                class="course-card reveal"
+                data-course-card
+                data-level="${course.level}"
+                data-category="${course.category}"
+                data-search="${course.title} ${course.shortTitle} ${course.description} ${course.tags.join(' ')} ${cat ? cat.label : ''}"
+                style="--course-color:${course.color};--delay:${idx * 0.05}s"
+              >
                 <div class="course-card-top" style="background:${course.color}">
                   <span class="course-card-level">${levelNames[course.level]}</span>
                   <span class="course-card-icon"><i class="fas ${course.icon}"></i></span>
-                  <span class="course-card-order">دورة ${idx + 1}</span>
+                  ${cat
+                    ? html`<span class="course-card-category"><i class="fas ${cat.icon}"></i> ${cat.label}</span>`
+                    : ''}
                 </div>
                 <div class="course-card-body">
                   <h3 class="course-card-title">${course.title}</h3>
@@ -64,7 +120,20 @@ export const CoursesPage = () => {
                 </div>
               </article>
             `
+            }
           )}
+        </div>
+
+        <!-- حالة عدم وجود نتائج -->
+        <div class="empty-state" id="courses-empty-state" hidden>
+          <div class="empty-state-icon"><i class="fas fa-magnifying-glass-minus"></i></div>
+          <h3 class="empty-state-title">لا توجد دورات تطابق بحثك</h3>
+          <p class="empty-state-desc">
+            جرّب كلمات أبسط أو غيّر التصنيف والمستوى المحددين. يمكنك أيضاً إعادة تعيين كل عوامل التصفية.
+          </p>
+          <button type="button" class="btn btn-outline btn-sm" id="courses-reset-filters">
+            <i class="fas fa-rotate-left"></i> إعادة تعيين البحث والفلاتر
+          </button>
         </div>
       </div>
     </section>
@@ -83,7 +152,8 @@ export const CoursesPage = () => {
 
   return Layout({
     title: 'الدورات التعليمية',
-    description: 'استكشف دورات تعلّم المحاسبة المالية من المبتدئ إلى الاحترافي في منصة محاسب برو.',
+    description:
+      'استكشف دورات تعلّم المحاسبة المالية للمحاسب العربي واليمني: محاسبة عامة ويمنية وضرائب يمنية وحكومية وIFRS وأدوات — مع بحث وتصنيفات.',
     activeNav: 'courses',
     children: content,
   })
